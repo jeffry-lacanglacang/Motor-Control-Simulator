@@ -876,14 +876,6 @@ const CATALOG = {
             { id: 'X2', label: 'X2', x: 0, y: 40 }
         ]
     },
-    'diode': {
-        cat: 'motors', name: 'Rectifier / Freewheeling Diode', defaultTag: 'D1', width: 40, height: 80,
-        isDiode: true,
-        terminals: [
-            { id: 'A', label: 'A', x: 0, y: -40 },
-            { id: 'K', label: 'K', x: 0, y: 40 }
-        ]
-    },
     'text_label': {
         cat: 'motors', name: 'Text Annotation / Title', defaultTag: 'NOTE', width: 120, height: 40,
         isLabel: true,
@@ -1452,9 +1444,7 @@ function buildElectricalGraph() {
         }
     }
 
-    // Bidirectional conductive edges (switches, contacts, closed overloads)
     const condAdj = new Map();
-    // Directed forward-biased diode edges (Anode root -> Cathode root)
     const diodeAdj = new Map();
 
     function addCondEdge(u, v) {
@@ -1579,7 +1569,6 @@ function buildElectricalGraph() {
     const nodePotentials = {};
     const energizedRoots = new Set();
 
-    // Propagate direct AC/DC potentials through bidirectional conductive contacts/wires first
     function propagateDirect(startKey, pot) {
         if (!startKey) return;
         const startRoot = find(startKey);
@@ -1604,7 +1593,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Collect direct source potentials
     const sourceSeeds = [];
     for (const comp of state.components) {
         const def = CATALOG[comp.type];
@@ -1619,13 +1607,10 @@ function buildElectricalGraph() {
         }
     }
 
-    // Run direct propagation for primary/DC/AC sources
     for (const s of sourceSeeds) {
         propagateDirect(s.key, s.pot);
     }
 
-    // Check if any step-down transformer primary (H1-H2) has a valid AC potential difference
-    // If energized, induce isolated secondary AC potentials (L1 on X1, N on X2)
     for (const comp of state.components) {
         const def = CATALOG[comp.type];
         if (!def || !def.isTransformer) continue;
@@ -1638,7 +1623,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Check direct (non-rectified) short circuits on conductive nodes
     for (const [root, pots] of Object.entries(nodePotentials)) {
         const liveAC = ['L1', 'L2', 'L3'].filter(p => pots.has(p));
         if (liveAC.length >= 2) {
@@ -1652,8 +1636,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Propagate rectified DC+ through forward-biased diodes (Anode -> Cathode)
-    // Any node fed via a diode anode from an AC/DC+ source becomes a DC+ rectified bus
     const dcPlusQueue = [];
     const dcPlusVisited = new Set();
 
@@ -1692,8 +1674,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Also mark nodes on the anode side of diodes that feed a DC+ bus as DC- return side
-    // when AC or DC- is present on that anode branch
     for (const [anodeRoot, cathodes] of diodeAdj.entries()) {
         let feedsDCPlus = false;
         for (const kRoot of cathodes) {
@@ -1725,14 +1705,12 @@ function buildElectricalGraph() {
         }
     }
 
-    // Check if DC+ and DC- are directly shorted together
     for (const [root, pots] of Object.entries(nodePotentials)) {
         if (pots.has('DC+') && pots.has('DC-')) {
             return { shortCircuit: 'Rectified DC+ to DC- Short Circuit!' };
         }
     }
 
-    // Combined adjacency for path checks (motors, star-delta, etc.)
     const adj = new Map();
     for (const [u, nbrs] of condAdj.entries()) {
         if (!adj.has(u)) adj.set(u, new Set());
@@ -2210,7 +2188,6 @@ function drawComponent(ctx, comp, isSelected) {
         : (typeof comp.closed === 'boolean' ? comp.closed : !!def.defaultClosed);
 
     if (def.isTransformer) {
-        // Primary leads (H1, H2) and Primary coil arc
         ctx.beginPath();
         ctx.moveTo(-20, -40); ctx.lineTo(-20, -24);
         ctx.moveTo(20, -40);  ctx.lineTo(20, -24);
@@ -2221,7 +2198,6 @@ function drawComponent(ctx, comp, isSelected) {
         ctx.arc(10, -16, 10, Math.PI, 0, false);
         ctx.stroke();
 
-        // Magnetic core double lines
         ctx.save();
         ctx.strokeStyle = '#f59e0b';
         ctx.lineWidth = 2;
@@ -2231,7 +2207,6 @@ function drawComponent(ctx, comp, isSelected) {
         ctx.stroke();
         ctx.restore();
 
-        // Secondary coil arc and leads (X1, X2)
         ctx.beginPath();
         ctx.arc(-10, 16, 10, 0, Math.PI, false);
         ctx.arc(10, 16, 10, 0, Math.PI, false);
