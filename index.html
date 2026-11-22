@@ -1310,21 +1310,67 @@ function findTerminalAt(wx, wy, tolerance = getHitTolerance(13, 20)) {
     return null;
 }
 
-function findWireEndpointAt(wx, wy, tolerance = getHitTolerance(11, 18)) {
+function projectPointToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const l2 = dx * dx + dy * dy;
+    if (l2 === 0) return { x: x1, y: y1, dist: Math.hypot(px - x1, py - y1) };
+    let t = ((px - x1) * dx + (py - y1) * dy) / l2;
+    t = Math.max(0, Math.min(1, t));
+    const projX = x1 + t * dx;
+    const projY = y1 + t * dy;
+    return { x: projX, y: projY, dist: Math.hypot(px - projX, py - projY) };
+}
+
+function findWireTapTargetAt(wx, wy, tolerance = getHitTolerance(11, 18), excludeWireId = null) {
+    // 1. Prioritize existing wire endpoints first
     for (let i = state.wires.length - 1; i >= 0; i--) {
         const w = state.wires[i];
+        if (excludeWireId && w.id === excludeWireId) continue;
         const pts = w.points || [];
         if (pts.length === 0) continue;
         const first = pts[0];
         if (Math.hypot(first.x - wx, first.y - wy) <= tolerance) {
-            return { wireId: w.id, ptIndex: 0, x: first.x, y: first.y };
+            return { wireId: w.id, kind: 'endpoint', ptIndex: 0, x: Math.round(first.x), y: Math.round(first.y) };
         }
         const last = pts[pts.length - 1];
         if (Math.hypot(last.x - wx, last.y - wy) <= tolerance) {
-            return { wireId: w.id, ptIndex: pts.length - 1, x: last.x, y: last.y };
+            return { wireId: w.id, kind: 'endpoint', ptIndex: pts.length - 1, x: Math.round(last.x), y: Math.round(last.y) };
         }
     }
-    return null;
+
+    // 2. Check any point along existing wire segments (T-junction / tap)
+    let bestHit = null;
+    let bestDist = tolerance;
+    for (let i = state.wires.length - 1; i >= 0; i--) {
+        const w = state.wires[i];
+        if (excludeWireId && w.id === excludeWireId) continue;
+        const pts = w.points || [];
+        for (let j = 0; j < pts.length - 1; j++) {
+            const p1 = pts[j];
+            const p2 = pts[j + 1];
+            const proj = projectPointToSegment(wx, wy, p1.x, p1.y, p2.x, p2.y);
+            if (proj.dist <= bestDist) {
+                let tx = Math.round(proj.x);
+                let ty = Math.round(proj.y);
+                if (state.snapToGrid) {
+                    const minX = Math.min(p1.x, p2.x);
+                    const maxX = Math.max(p1.x, p2.x);
+                    const minY = Math.min(p1.y, p2.y);
+                    const maxY = Math.max(p1.y, p2.y);
+                    const sx = Math.max(minX, Math.min(maxX, snapVal(proj.x)));
+                    const sy = Math.max(minY, Math.min(maxY, snapVal(proj.y)));
+                    if (distToSegment(sx, sy, p1.x, p1.y, p2.x, p2.y) <= 2) {
+                        tx = Math.round(sx);
+                        ty = Math.round(sy);
+                    }
+                }
+                bestDist = proj.dist;
+                bestHit = { wireId: w.id, kind: 'segment', segIndex: j, x: tx, y: ty };
+            }
+        }
+    }
+    return bestHit;
 }
 
 function findComponentAt(wx, wy) {
@@ -1526,26 +1572,59 @@ function applyTerminalWireAttachments(attachments, simplify = false) {
 
 function computeJunctionDots() {
     const endpointCounts = new Map();
+    const wireEndpoints = [];
+
     for (const w of state.wires) {
         const pts = w.points || [];
         if (pts.length === 0) continue;
-        const firstKey = `${Math.round(pts[0].x)},${Math.round(pts[0].y)}`;
+        const first = { x: Math.round(pts[0].x), y: Math.round(pts[0].y), wireId: w.id };
+        const firstKey = `${first.x},${first.y}`;
         endpointCounts.set(firstKey, (endpointCounts.get(firstKey) || 0) + 1);
+        wireEndpoints.push(first);
+
         if (pts.length > 1) {
-            const last = pts[pts.length - 1];
-            const lastKey = `${Math.round(last.x)},${Math.round(last.y)}`;
+            const lastRaw = pts[pts.length - 1];
+            const last = { x: Math.round(lastRaw.x), y: Math.round(lastRaw.y), wireId: w.id };
+            const lastKey = `${last.x},${last.y}`;
             endpointCounts.set(lastKey, (endpointCounts.get(lastKey) || 0) + 1);
+            wireEndpoints.push(last);
         }
     }
 
-    const junctions = [];
+    const junctionMap = new Map();
+
+    // 1. Where 3 or more wire endpoints meet at the exact same point
     for (const [key, count] of endpointCounts.entries()) {
         if (count >= 3) {
             const [x, y] = key.split(',').map(Number);
-            junctions.push({ x, y });
+            junctionMap.set(key, { x, y });
         }
     }
-    return junctions;
+
+    // 2. Where a wire endpoint lands (T-taps) onto any segment of another wire
+    for (const ep of wireEndpoints) {
+        const key = `${ep.x},${ep.y}`;
+        if (junctionMap.has(key)) continue;
+        for (const w of state.wires) {
+            if (w.id === ep.wireId) continue;
+            const pts = w.points || [];
+            for (let s = 0; s < pts.length - 1; s++) {
+                const p1 = pts[s];
+                const p2 = pts[s + 1];
+                if (distToSegment(ep.x, ep.y, p1.x, p1.y, p2.x, p2.y) <= 2) {
+                    const isStart = Math.hypot(ep.x - p1.x, ep.y - p1.y) <= 2 && s === 0;
+                    const isEnd = Math.hypot(ep.x - p2.x, ep.y - p2.y) <= 2 && s === pts.length - 2;
+                    if (!isStart && !isEnd) {
+                        junctionMap.set(key, { x: ep.x, y: ep.y });
+                        break;
+                    }
+                }
+            }
+            if (junctionMap.has(key)) break;
+        }
+    }
+
+    return Array.from(junctionMap.values());
 }
 
 function buildElectricalGraph() {
@@ -1584,7 +1663,9 @@ function buildElectricalGraph() {
     }
 
     const compTermKeys = new Map();
-    const allNodes = [];
+    // Only terminals and wire endpoints can tap into a wire segment;
+    // interior wire bends/vertices that merely cross another wire must remain unconnected.
+    const tapNodes = [];
 
     for (const comp of state.components) {
         const terms = getComponentTerminalsWorld(comp);
@@ -1592,7 +1673,7 @@ function buildElectricalGraph() {
         for (const t of terms) {
             const k = regPt(t.x, t.y);
             map[t.termId] = k;
-            allNodes.push({ x: Math.round(t.x), y: Math.round(t.y), key: k });
+            tapNodes.push({ x: Math.round(t.x), y: Math.round(t.y), key: k, wireId: null });
         }
         compTermKeys.set(comp.id, map);
     }
@@ -1601,14 +1682,19 @@ function buildElectricalGraph() {
         const pts = w.points || [];
         if (pts.length === 0) continue;
         const startKey = regPt(pts[0].x, pts[0].y);
-        allNodes.push({ x: Math.round(pts[0].x), y: Math.round(pts[0].y), key: startKey });
+        tapNodes.push({ x: Math.round(pts[0].x), y: Math.round(pts[0].y), key: startKey, wireId: w.id });
+
         for (let i = 1; i < pts.length; i++) {
             const vk = regPt(pts[i].x, pts[i].y);
-            allNodes.push({ x: Math.round(pts[i].x), y: Math.round(pts[i].y), key: vk });
             union(startKey, vk);
+            if (i === pts.length - 1) {
+                tapNodes.push({ x: Math.round(pts[i].x), y: Math.round(pts[i].y), key: vk, wireId: w.id });
+            }
         }
     }
 
+    // Connect terminals or wire endpoints that land on any segment of a wire (T-junction / tap).
+    // Crossing wires without an endpoint terminating on the segment are NOT unioned.
     for (const w of state.wires) {
         const pts = w.points || [];
         if (pts.length < 2) continue;
@@ -1616,18 +1702,20 @@ function buildElectricalGraph() {
         for (let s = 0; s < pts.length - 1; s++) {
             const p1 = pts[s];
             const p2 = pts[s + 1];
-            for (const nd of allNodes) {
-                if (distToSegment(nd.x, nd.y, p1.x, p1.y, p2.x, p2.y) <= 5) {
+            for (const nd of tapNodes) {
+                if (nd.wireId === w.id) continue;
+                if (distToSegment(nd.x, nd.y, p1.x, p1.y, p2.x, p2.y) <= 4) {
                     union(baseKey, nd.key);
                 }
             }
         }
     }
 
-    for (let i = 0; i < allNodes.length; i++) {
-        for (let j = i + 1; j < allNodes.length; j++) {
-            if (Math.hypot(allNodes[i].x - allNodes[j].x, allNodes[i].y - allNodes[j].y) <= 5) {
-                union(allNodes[i].key, allNodes[j].key);
+    // Connect terminals and wire endpoints that share the exact same coordinate (within 4px)
+    for (let i = 0; i < tapNodes.length; i++) {
+        for (let j = i + 1; j < tapNodes.length; j++) {
+            if (Math.hypot(tapNodes[i].x - tapNodes[j].x, tapNodes[i].y - tapNodes[j].y) <= 4) {
+                union(tapNodes[i].key, tapNodes[j].key);
             }
         }
     }
@@ -3095,10 +3183,19 @@ function render() {
 
     if (state.hoveredWirePoint && !state.isSimulating) {
         ctx.save();
-        ctx.fillStyle = '#3b82f6';
+        ctx.fillStyle = '#10b981';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(state.hoveredWirePoint.x, state.hoveredWirePoint.y, 5, 0, Math.PI * 2);
+        ctx.arc(state.hoveredWirePoint.x, state.hoveredWirePoint.y, 5.5, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(state.hoveredWirePoint.x, state.hoveredWirePoint.y, 9.5, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
     }
 
@@ -3664,13 +3761,15 @@ function setupCanvasInteractions() {
         }
 
         const hitTerm = findTerminalAt(world.x, world.y, getHitTolerance(14, 21));
-        const hitWireEnd = !hitTerm && state.tool === 'wire' ? findWireEndpointAt(world.x, world.y, getHitTolerance(12, 18)) : null;
+        const hitWireTap = !hitTerm && (state.tool === 'wire' || state.drawingWire)
+            ? findWireTapTargetAt(world.x, world.y, getHitTolerance(12, 18))
+            : null;
 
         if (state.tool === 'wire' || hitTerm) {
             const startPt = hitTerm
                 ? { x: hitTerm.x, y: hitTerm.y }
-                : hitWireEnd
-                    ? { x: hitWireEnd.x, y: hitWireEnd.y }
+                : hitWireTap
+                    ? { x: hitWireTap.x, y: hitWireTap.y }
                     : { x: snapVal(world.x), y: snapVal(world.y) };
 
             if (!state.drawingWire) {
@@ -3686,7 +3785,7 @@ function setupCanvasInteractions() {
                     pts.push(startPt);
                 }
 
-                if (hitTerm || hitWireEnd || (last.x === startPt.x && last.y === startPt.y)) {
+                if (hitTerm || hitWireTap || (last.x === startPt.x && last.y === startPt.y)) {
                     const cleanPts = simplifyWirePoints(pts);
                     if (cleanPts.length >= 2) {
                         const newWire = {
@@ -3704,6 +3803,7 @@ function setupCanvasInteractions() {
                         refreshInspectorIfOpen();
                     }
                     state.drawingWire = null;
+                    state.hoveredWirePoint = null;
                 }
             }
             render();
@@ -3853,7 +3953,7 @@ function setupCanvasInteractions() {
 
         state.hoveredTerminal = findTerminalAt(world.x, world.y, getHitTolerance(13, 20));
         state.hoveredWirePoint = (!state.hoveredTerminal && (state.tool === 'wire' || state.drawingWire))
-            ? findWireEndpointAt(world.x, world.y, getHitTolerance(11, 18))
+            ? findWireTapTargetAt(world.x, world.y, getHitTolerance(11, 18))
             : null;
 
         if (state.draggingComp && !state.isSimulating) {
@@ -3897,8 +3997,12 @@ function setupCanvasInteractions() {
 
             if (dw.mode === 'vertex') {
                 const idx = dw.vertexIndex;
-                const snapTarget = findTerminalAt(orig[idx].x + rawDx, orig[idx].y + rawDy, getHitTolerance(13, 20))
-                    || findWireEndpointAt(orig[idx].x + rawDx, orig[idx].y + rawDy, getHitTolerance(11, 18));
+                const snapTerm = findTerminalAt(orig[idx].x + rawDx, orig[idx].y + rawDy, getHitTolerance(13, 20));
+                const snapTap = !snapTerm
+                    ? findWireTapTargetAt(orig[idx].x + rawDx, orig[idx].y + rawDy, getHitTolerance(11, 18), dw.wire.id)
+                    : null;
+                state.hoveredWirePoint = (idx === 0 || idx === orig.length - 1) ? snapTap : null;
+                const snapTarget = snapTerm || snapTap;
                 const tx = snapTarget ? snapTarget.x : orig[idx].x + dx;
                 const ty = snapTarget ? snapTarget.y : orig[idx].y + dy;
 
@@ -4024,6 +4128,7 @@ function setupCanvasInteractions() {
                 state.draggingWire.wire.points = simplifyWirePoints(state.draggingWire.wire.points);
             }
             state.draggingWire = null;
+            state.hoveredWirePoint = null;
             render();
         }
 
