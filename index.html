@@ -124,6 +124,9 @@
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-cad-bgDark dark:text-slate-100 flex flex-col overflow-hidden transition-colors duration-150">
 
+    <!-- HIDDEN NATIVE FILE INPUT FOR JSON IMPORT -->
+    <input type="file" id="json-file-input" accept=".json,application/json" class="hidden">
+
     <!-- LAUNCH SCREEN -->
     <div id="launch-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-50 dark:bg-cad-bgDark text-slate-900 dark:text-slate-100 p-6 transition-opacity duration-300">
         <div class="max-w-md w-full rounded-2xl bg-white dark:bg-cad-panelDark border border-slate-200 dark:border-cad-borderDark shadow-2xl p-8 text-center space-y-6">
@@ -214,11 +217,20 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                     <span class="hidden sm:inline">File</span>
                 </button>
-                <div id="menu-file" class="hidden fixed sm:absolute right-3 sm:right-0 top-[60px] sm:top-auto sm:mt-1.5 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 space-y-1">
-                    <button id="btn-export-json" type="button" class="touch-target w-full text-left px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700">Export JSON</button>
-                    <button id="btn-import-json" type="button" class="touch-target w-full text-left px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700">Import JSON</button>
+                <div id="menu-file" class="hidden fixed sm:absolute right-3 sm:right-0 top-[60px] sm:top-auto sm:mt-1.5 w-52 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 space-y-1">
+                    <button id="btn-export-json" type="button" class="touch-target w-full flex items-center gap-2 text-left px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700">
+                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <span>Export JSON (.json)</span>
+                    </button>
+                    <button id="btn-import-json" type="button" class="touch-target w-full flex items-center gap-2 text-left px-3 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span>Import JSON (.json)</span>
+                    </button>
                     <div class="border-t border-slate-200 dark:border-slate-800 my-1"></div>
-                    <button id="btn-clear-canvas" type="button" class="touch-target w-full text-left px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50">Clear Canvas</button>
+                    <button id="btn-clear-canvas" type="button" class="touch-target w-full flex items-center gap-2 text-left px-3 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Clear Canvas</span>
+                    </button>
                 </div>
             </div>
 
@@ -271,9 +283,19 @@
         <main class="flex-1 relative overflow-hidden bg-cad-bgLight dark:bg-cad-bgDark" id="canvas-wrapper">
             <canvas id="cad-canvas" class="block w-full h-full touch-none"></canvas>
 
-            <div id="toast-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl border border-white/20 flex items-center gap-2 text-xs font-bold pointer-events-none transition-opacity duration-200">
-                <svg class="w-4 h-4 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                <span id="toast-banner-text">Changes applied</span>
+            <!-- DRAG & DROP FILE OVERLAY -->
+            <div id="drop-file-overlay" class="hidden absolute inset-4 z-40 rounded-2xl border-2 border-dashed border-blue-500 bg-blue-600/15 dark:bg-blue-500/20 backdrop-blur-xs flex flex-col items-center justify-center pointer-events-none">
+                <div class="bg-white dark:bg-slate-900 px-6 py-4 rounded-2xl shadow-2xl border border-blue-400/50 flex flex-col items-center gap-2 text-center">
+                    <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white">Drop .JSON Schematic File</div>
+                    <div class="text-xs text-slate-600 dark:text-slate-300">Release to load onto the CAD canvas</div>
+                </div>
+            </div>
+
+            <div id="toast-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 dark:bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl border border-white/20 flex items-center gap-2 text-xs font-bold pointer-events-none transition-opacity duration-200 max-w-[92vw]">
+                <svg id="toast-icon-ok" class="w-4 h-4 text-emerald-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                <svg id="toast-icon-err" class="w-4 h-4 text-amber-200 hidden shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z"/></svg>
+                <span id="toast-banner-text" class="truncate">Changes applied</span>
             </div>
 
             <div id="alert-banner" class="hidden absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-red-600 text-white px-4 py-2 rounded-2xl shadow-xl border border-red-400 flex items-center gap-2.5 short-circuit-banner max-w-[92vw]">
@@ -458,21 +480,6 @@
             <span class="hidden md:inline text-blue-600 dark:text-blue-400">IEC 60617 Engine Ready</span>
         </div>
     </footer>
-
-    <!-- JSON IMPORT/EXPORT MODAL -->
-    <div id="json-modal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full p-4 shadow-2xl space-y-3">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-sm text-slate-900 dark:text-white" id="json-modal-title">Schematic JSON Data</h3>
-                <button id="btn-close-json" type="button" class="touch-target flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-white">✕</button>
-            </div>
-            <textarea id="json-textarea" rows="10" class="w-full font-mono text-xs p-3 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 focus:outline-none"></textarea>
-            <div class="flex justify-end gap-2">
-                <button id="btn-copy-json" type="button" class="touch-target px-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700">Copy to Clipboard</button>
-                <button id="btn-load-json" type="button" class="touch-target px-4 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-500">Load Schematic</button>
-            </div>
-        </div>
-    </div>
 
 <script>
 const GRID_SIZE = 20;
@@ -1002,16 +1009,197 @@ function updateHistoryButtons() {
 }
 
 let toastTimer = null;
-function showToast(msg) {
+function showToast(msg, isError = false) {
     const banner = document.getElementById('toast-banner');
     const txt = document.getElementById('toast-banner-text');
+    const iconOk = document.getElementById('toast-icon-ok');
+    const iconErr = document.getElementById('toast-icon-err');
     if (!banner || !txt) return;
+
     txt.textContent = msg;
+    if (isError) {
+        banner.classList.remove('bg-slate-900/95', 'dark:bg-blue-600');
+        banner.classList.add('bg-red-600', 'dark:bg-red-600');
+        if (iconOk) iconOk.classList.add('hidden');
+        if (iconErr) iconErr.classList.remove('hidden');
+    } else {
+        banner.classList.remove('bg-red-600', 'dark:bg-red-600');
+        banner.classList.add('bg-slate-900/95', 'dark:bg-blue-600');
+        if (iconOk) iconOk.classList.remove('hidden');
+        if (iconErr) iconErr.classList.add('hidden');
+    }
+
     banner.classList.remove('hidden');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
         banner.classList.add('hidden');
-    }, 1800);
+    }, isError ? 3200 : 2200);
+}
+
+// =========================================================================
+// NATIVE DEVICE FILE EXPLORER JSON EXPORT & IMPORT
+// =========================================================================
+function getDefaultSchematicFilename() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `motor-control-schematic-${yyyy}-${mm}-${dd}.json`;
+}
+
+async function exportSchematicToFile() {
+    const payload = {
+        app: 'Motor Control Simulator',
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        ...deepCloneScene()
+    };
+    const jsonString = JSON.stringify(payload, null, 2);
+    const filename = getDefaultSchematicFilename();
+
+    // Try File System Access API when available in top-level secure context
+    if (typeof window.showSaveFilePicker === 'function') {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: filename,
+                types: [{
+                    description: 'Motor Control Schematic JSON',
+                    accept: { 'application/json': ['.json'] }
+                }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(jsonString);
+            await writable.close();
+            showToast(`Exported: ${handle.name || filename}`);
+            return;
+        } catch (err) {
+            if (err && err.name === 'AbortError') {
+                return; // User cancelled File Explorer save dialog
+            }
+            // Fall back to standard download anchor in restricted frames / unsupported devices
+        }
+    }
+
+    try {
+        const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 150);
+        showToast('Schematic exported (.json)');
+    } catch (err) {
+        showToast('Failed to export JSON file', true);
+    }
+}
+
+function loadSchematicObject(parsed, sourceName = '') {
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.components) || !Array.isArray(parsed.wires)) {
+        throw new Error('Invalid schematic JSON format');
+    }
+
+    // Sanitize and normalize imported components & wires
+    const validComponents = parsed.components
+        .filter(c => c && typeof c === 'object' && typeof c.type === 'string' && CATALOG[c.type])
+        .map(c => {
+            const def = CATALOG[c.type];
+            return {
+                id: typeof c.id === 'string' && c.id ? c.id : genId('comp'),
+                type: c.type,
+                tag: typeof c.tag === 'string' ? c.tag : def.defaultTag,
+                x: Number.isFinite(Number(c.x)) ? Number(c.x) : 0,
+                y: Number.isFinite(Number(c.y)) ? Number(c.y) : 0,
+                rotation: Number.isFinite(Number(c.rotation)) ? (((Number(c.rotation) % 360) + 360) % 360) : 0,
+                closed: typeof c.closed === 'boolean' ? c.closed : !!def.defaultClosed,
+                step: Number.isFinite(Number(c.step)) ? Number(c.step) : 0,
+                delay: Number.isFinite(Number(c.delay)) ? Number(c.delay) : (def.defaultDelay || 3.0),
+                primaryV: Number.isFinite(Number(c.primaryV)) ? Number(c.primaryV) : (def.defaultPrimaryV || 230),
+                secondaryV: Number.isFinite(Number(c.secondaryV)) ? Number(c.secondaryV) : (def.defaultSecondaryV || 24),
+                color: typeof c.color === 'string' ? c.color : (def.defaultColor || '#22c55e'),
+                comment: typeof c.comment === 'string' ? c.comment : '',
+                terminalLabels: (c.terminalLabels && typeof c.terminalLabels === 'object') ? c.terminalLabels : {}
+            };
+        });
+
+    const validWires = parsed.wires
+        .filter(w => w && typeof w === 'object' && Array.isArray(w.points) && w.points.length >= 2)
+        .map(w => ({
+            id: typeof w.id === 'string' && w.id ? w.id : genId('wire'),
+            potential: (typeof w.potential === 'string' && WIRE_STYLES[w.potential]) ? w.potential : 'C1',
+            points: w.points
+                .filter(p => p && Number.isFinite(Number(p.x)) && Number.isFinite(Number(p.y)))
+                .map(p => ({ x: Math.round(Number(p.x)), y: Math.round(Number(p.y)) })),
+            tag: typeof w.tag === 'string' ? w.tag : '',
+            comment: typeof w.comment === 'string' ? w.comment : ''
+        }))
+        .filter(w => w.points.length >= 2);
+
+    if (state.isSimulating) stopSimulation();
+    state.components = validComponents;
+    state.wires = validWires;
+    state.selectedIds.clear();
+    pushHistory();
+    updateFloatingActions();
+    refreshInspectorIfOpen();
+    fitSchematicToScreen();
+
+    const label = sourceName ? `Imported "${sourceName}"` : 'Schematic imported (.json)';
+    showToast(label);
+}
+
+function readAndLoadJsonFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const rawText = String(event.target?.result || '');
+            const parsed = JSON.parse(rawText);
+            loadSchematicObject(parsed, file.name);
+        } catch (err) {
+            showToast('Invalid JSON schematic file', true);
+        }
+    };
+    reader.onerror = () => {
+        showToast('Unable to read selected file', true);
+    };
+    reader.readAsText(file);
+}
+
+async function triggerImportFromFileExplorer() {
+    // Use File System Access API if available in secure top-level browsing context
+    if (typeof window.showOpenFilePicker === 'function') {
+        try {
+            const [fileHandle] = await window.showOpenFilePicker({
+                multiple: false,
+                types: [{
+                    description: 'Motor Control Schematic JSON',
+                    accept: { 'application/json': ['.json'] }
+                }]
+            });
+            if (fileHandle) {
+                const file = await fileHandle.getFile();
+                readAndLoadJsonFile(file);
+            }
+            return;
+        } catch (err) {
+            if (err && err.name === 'AbortError') {
+                return; // User cancelled File Explorer open dialog
+            }
+            // Fall back to standard <input type="file"> below
+        }
+    }
+
+    const fileInput = document.getElementById('json-file-input');
+    if (fileInput) {
+        fileInput.value = '';
+        fileInput.click();
+    }
 }
 
 let buzzerSynth = null;
@@ -3352,6 +3540,43 @@ function fitSchematicToScreen() {
 
 function setupCanvasInteractions() {
     const canvas = document.getElementById('cad-canvas');
+    const wrapper = document.getElementById('canvas-wrapper');
+    const dropOverlay = document.getElementById('drop-file-overlay');
+    let dragFileCounter = 0;
+
+    wrapper.addEventListener('dragenter', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+            e.preventDefault();
+            dragFileCounter++;
+            if (dropOverlay) dropOverlay.classList.remove('hidden');
+        }
+    });
+
+    wrapper.addEventListener('dragover', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+    });
+
+    wrapper.addEventListener('dragleave', (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+            dragFileCounter = Math.max(0, dragFileCounter - 1);
+            if (dragFileCounter === 0 && dropOverlay) {
+                dropOverlay.classList.add('hidden');
+            }
+        }
+    });
+
+    wrapper.addEventListener('drop', (e) => {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            dragFileCounter = 0;
+            if (dropOverlay) dropOverlay.classList.add('hidden');
+            const file = e.dataTransfer.files[0];
+            readAndLoadJsonFile(file);
+        }
+    });
 
     canvas.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -4047,14 +4272,26 @@ window.addEventListener('load', () => {
 
     document.getElementById('tool-select').addEventListener('click', () => setTool('select'));
     document.getElementById('tool-wire').addEventListener('click', () => setTool('wire'));
+
     document.getElementById('wire-color-select').addEventListener('change', (e) => {
         state.activeWirePotential = e.target.value;
+        if (state.selectedIds.size === 1 && !state.isSimulating) {
+            const selId = Array.from(state.selectedIds)[0];
+            const wire = state.wires.find(w => w.id === selId);
+            if (wire) {
+                wire.potential = e.target.value;
+                pushHistory();
+                refreshInspectorIfOpen();
+            }
+        }
+        render();
     });
 
     document.getElementById('btn-undo').addEventListener('click', undo);
     document.getElementById('btn-redo').addEventListener('click', redo);
     document.getElementById('btn-mob-undo').addEventListener('click', undo);
     document.getElementById('btn-mob-redo').addEventListener('click', redo);
+
     document.getElementById('btn-rotate').addEventListener('click', rotateSelected);
     document.getElementById('btn-duplicate').addEventListener('click', duplicateSelected);
     document.getElementById('btn-delete').addEventListener('click', deleteSelected);
@@ -4062,123 +4299,6 @@ window.addEventListener('load', () => {
     document.getElementById('mob-rotate').addEventListener('click', rotateSelected);
     document.getElementById('mob-duplicate').addEventListener('click', duplicateSelected);
     document.getElementById('mob-delete').addEventListener('click', deleteSelected);
-    document.getElementById('prop-btn-dup').addEventListener('click', duplicateSelected);
-    document.getElementById('prop-btn-del').addEventListener('click', deleteSelected);
-
-    ['prop-tag', 'prop-comment', 'prop-delay', 'prop-pri-v', 'prop-sec-v'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.addEventListener('input', () => setInspectorDirty(true));
-        el.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                applyInspectorChanges();
-            }
-        });
-    });
-
-    document.getElementById('prop-wire-potential').addEventListener('change', () => {
-        setInspectorDirty(true);
-    });
-
-    document.getElementById('prop-latched').addEventListener('change', () => {
-        setInspectorDirty(true);
-    });
-
-    document.querySelectorAll('#prop-color-swatches button').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (!state.inspectorDraft) return;
-            state.inspectorDraft.color = btn.dataset.color;
-            highlightActiveColorSwatch(btn.dataset.color);
-            setInspectorDirty(true);
-        });
-    });
-
-    document.querySelectorAll('.rot-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (!state.inspectorDraft) return;
-            const rot = parseInt(btn.dataset.rot, 10) || 0;
-            state.inspectorDraft.rotation = rot;
-            highlightActiveRotationBtn(rot);
-            setInspectorDirty(true);
-        });
-    });
-
-    document.getElementById('prop-btn-apply').addEventListener('click', applyInspectorChanges);
-    document.getElementById('prop-btn-reset').addEventListener('click', () => {
-        populateInspector();
-        showToast('Reverted unapplied edits');
-    });
-
-    document.getElementById('btn-file-menu').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('menu-file').classList.toggle('hidden');
-    });
-
-    document.getElementById('btn-clear-canvas').addEventListener('click', () => {
-        if (state.isSimulating) stopSimulation();
-        state.components = [];
-        state.wires = [];
-        state.selectedIds.clear();
-        pushHistory();
-        updateFloatingActions();
-        refreshInspectorIfOpen();
-        document.getElementById('menu-file').classList.add('hidden');
-        render();
-    });
-
-    document.getElementById('btn-export-json').addEventListener('click', () => {
-        document.getElementById('menu-file').classList.add('hidden');
-        document.getElementById('json-modal-title').textContent = 'Export Schematic JSON';
-        document.getElementById('json-textarea').value = JSON.stringify(deepCloneScene(), null, 2);
-        document.getElementById('json-modal').classList.remove('hidden');
-    });
-
-    document.getElementById('btn-import-json').addEventListener('click', () => {
-        document.getElementById('menu-file').classList.add('hidden');
-        document.getElementById('json-modal-title').textContent = 'Import Schematic JSON';
-        document.getElementById('json-textarea').value = '';
-        document.getElementById('json-modal').classList.remove('hidden');
-    });
-
-    document.getElementById('btn-close-json').addEventListener('click', () => {
-        document.getElementById('json-modal').classList.add('hidden');
-    });
-
-    document.getElementById('btn-copy-json').addEventListener('click', () => {
-        const ta = document.getElementById('json-textarea');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(ta.value).then(() => showToast('JSON copied to clipboard')).catch(() => {
-                ta.select();
-                document.execCommand('copy');
-                showToast('JSON copied to clipboard');
-            });
-        } else {
-            ta.select();
-            document.execCommand('copy');
-            showToast('JSON copied to clipboard');
-        }
-    });
-
-    document.getElementById('btn-load-json').addEventListener('click', () => {
-        try {
-            const parsed = JSON.parse(document.getElementById('json-textarea').value);
-            if (!parsed || !Array.isArray(parsed.components) || !Array.isArray(parsed.wires)) {
-                throw new Error('Invalid schematic schema');
-            }
-            if (state.isSimulating) stopSimulation();
-            state.components = parsed.components;
-            state.wires = parsed.wires;
-            state.selectedIds.clear();
-            pushHistory();
-            updateFloatingActions();
-            refreshInspectorIfOpen();
-            fitSchematicToScreen();
-            document.getElementById('json-modal').classList.add('hidden');
-        } catch (err) {
-            document.getElementById('json-modal-title').textContent = 'Invalid JSON — Check Syntax';
-        }
-    });
 
     document.getElementById('btn-grid-toggle').addEventListener('click', (e) => {
         state.snapToGrid = !state.snapToGrid;
@@ -4201,15 +4321,11 @@ window.addEventListener('load', () => {
         zoomAtScreenPoint(0.83, (canvas.width / dpr) / 2, (canvas.height / dpr) / 2);
     });
 
-    document.getElementById('btn-sound-toggle').addEventListener('click', async () => {
+    document.getElementById('btn-sound-toggle').addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('icon-sound-on').classList.toggle('hidden', !state.soundEnabled);
         document.getElementById('icon-sound-off').classList.toggle('hidden', state.soundEnabled);
-        if (state.soundEnabled) {
-            await ensureAudioReady();
-        } else {
-            setBuzzerSound(false);
-        }
+        if (!state.soundEnabled) setBuzzerSound(false);
     });
 
     document.getElementById('btn-theme-toggle').addEventListener('click', () => {
@@ -4218,32 +4334,121 @@ window.addEventListener('load', () => {
         render();
     });
 
-    document.getElementById('btn-launch-app').addEventListener('click', async () => {
-        await ensureAudioReady();
-        const screen = document.getElementById('launch-screen');
-        screen.classList.add('opacity-0', 'pointer-events-none');
-        setTimeout(() => {
-            screen.classList.add('hidden');
-            resizeCanvas();
-        }, 250);
+    document.getElementById('btn-file-menu').addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('menu-file').classList.toggle('hidden');
     });
 
+    document.getElementById('btn-clear-canvas').addEventListener('click', () => {
+        if (state.isSimulating) stopSimulation();
+        state.components = [];
+        state.wires = [];
+        state.selectedIds.clear();
+        pushHistory();
+        updateFloatingActions();
+        refreshInspectorIfOpen();
+        render();
+        document.getElementById('menu-file').classList.add('hidden');
+        showToast('Canvas cleared');
+    });
+
+    // Direct Device File Explorer Export (.json)
+    document.getElementById('btn-export-json').addEventListener('click', () => {
+        document.getElementById('menu-file').classList.add('hidden');
+        exportSchematicToFile();
+    });
+
+    // Direct Device File Explorer Import (.json)
+    document.getElementById('btn-import-json').addEventListener('click', () => {
+        document.getElementById('menu-file').classList.add('hidden');
+        triggerImportFromFileExplorer();
+    });
+
+    document.getElementById('json-file-input').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+            readAndLoadJsonFile(file);
+        }
+        e.target.value = '';
+    });
+
+    // Inspector Draft Change Listeners + Explicit Apply
+    ['prop-tag', 'prop-comment', 'prop-pri-v', 'prop-sec-v', 'prop-delay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', () => {
+            if (!state.inspectorDraft) return;
+            setInspectorDirty(true);
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyInspectorChanges();
+            }
+        });
+    });
+
+    document.getElementById('prop-wire-potential').addEventListener('change', (e) => {
+        if (!state.inspectorDraft || state.inspectorDraft.kind !== 'wire') return;
+        state.inspectorDraft.potential = e.target.value;
+        setInspectorDirty(true);
+    });
+
+    document.getElementById('prop-latched').addEventListener('change', (e) => {
+        if (!state.inspectorDraft || state.inspectorDraft.kind !== 'comp') return;
+        state.inspectorDraft.closed = e.target.checked;
+        setInspectorDirty(true);
+    });
+
+    document.querySelectorAll('#prop-color-swatches button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!state.inspectorDraft || state.inspectorDraft.kind !== 'comp') return;
+            state.inspectorDraft.color = btn.dataset.color;
+            highlightActiveColorSwatch(state.inspectorDraft.color);
+            setInspectorDirty(true);
+        });
+    });
+
+    document.querySelectorAll('.rot-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!state.inspectorDraft || state.inspectorDraft.kind !== 'comp') return;
+            state.inspectorDraft.rotation = parseInt(btn.dataset.rot, 10) || 0;
+            highlightActiveRotationBtn(state.inspectorDraft.rotation);
+            setInspectorDirty(true);
+        });
+    });
+
+    document.getElementById('prop-btn-apply').addEventListener('click', applyInspectorChanges);
+    document.getElementById('prop-btn-reset').addEventListener('click', () => {
+        populateInspector();
+        showToast('Draft reset');
+    });
+    document.getElementById('prop-btn-dup').addEventListener('click', duplicateSelected);
+    document.getElementById('prop-btn-del').addEventListener('click', deleteSelected);
+
+    // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
-        const tag = document.activeElement && document.activeElement.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
 
         if (e.code === 'Space') {
             state.spacePressed = true;
-        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
             e.preventDefault();
-            if (e.shiftKey) redo();
-            else undo();
+            undo();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
             e.preventDefault();
             redo();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
             e.preventDefault();
             duplicateSelected();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            exportSchematicToFile();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+            e.preventDefault();
+            triggerImportFromFileExplorer();
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
             deleteSelected();
         } else if (e.key.toLowerCase() === 'r') {
@@ -4253,21 +4458,29 @@ window.addEventListener('load', () => {
         } else if (e.key.toLowerCase() === 'w') {
             setTool('wire');
         } else if (e.key === 'Escape') {
-            if (state.drawingWire) {
-                state.drawingWire = null;
-                render();
-            }
+            state.drawingWire = null;
+            state.selectedIds.clear();
+            updateFloatingActions();
+            refreshInspectorIfOpen();
+            render();
         }
     });
 
     window.addEventListener('keyup', (e) => {
-        if (e.code === 'Space') {
-            state.spacePressed = false;
+        if (e.code === 'Space') state.spacePressed = false;
+    });
+
+    document.getElementById('btn-launch-app').addEventListener('click', () => {
+        const screen = document.getElementById('launch-screen');
+        if (screen) {
+            screen.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => screen.classList.add('hidden'), 300);
         }
+        resizeCanvas();
     });
 
     requestAnimationFrame(mainLoop);
 });
 </script>
 </body>
-</html>
+    </html>
