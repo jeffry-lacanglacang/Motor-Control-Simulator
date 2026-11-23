@@ -1175,7 +1175,6 @@ async function exportSchematicToFile() {
     const jsonString = JSON.stringify(payload, null, 2);
     const filename = getDefaultSchematicFilename();
 
-    // Try File System Access API when available in top-level secure context
     if (typeof window.showSaveFilePicker === 'function') {
         try {
             const handle = await window.showSaveFilePicker({
@@ -1192,9 +1191,8 @@ async function exportSchematicToFile() {
             return;
         } catch (err) {
             if (err && err.name === 'AbortError') {
-                return; // User cancelled File Explorer save dialog
+                return;
             }
-            // Fall back to standard download anchor in restricted frames / unsupported devices
         }
     }
 
@@ -1222,7 +1220,6 @@ function loadSchematicObject(parsed, sourceName = '') {
         throw new Error('Invalid schematic JSON format');
     }
 
-    // Sanitize and normalize imported components & wires
     const validComponents = parsed.components
         .filter(c => c && typeof c === 'object' && typeof c.type === 'string' && CATALOG[c.type])
         .map(c => {
@@ -1290,7 +1287,6 @@ function readAndLoadJsonFile(file) {
 }
 
 async function triggerImportFromFileExplorer() {
-    // Use File System Access API if available in secure top-level browsing context
     if (typeof window.showOpenFilePicker === 'function') {
         try {
             const [fileHandle] = await window.showOpenFilePicker({
@@ -1307,9 +1303,8 @@ async function triggerImportFromFileExplorer() {
             return;
         } catch (err) {
             if (err && err.name === 'AbortError') {
-                return; // User cancelled File Explorer open dialog
+                return;
             }
-            // Fall back to standard <input type="file"> below
         }
     }
 
@@ -1441,7 +1436,6 @@ function projectPointToSegment(px, py, x1, y1, x2, y2) {
 }
 
 function findWireTapTargetAt(wx, wy, tolerance = getHitTolerance(11, 18), excludeWireId = null) {
-    // 1. Prioritize existing wire endpoints first
     for (let i = state.wires.length - 1; i >= 0; i--) {
         const w = state.wires[i];
         if (excludeWireId && w.id === excludeWireId) continue;
@@ -1457,7 +1451,6 @@ function findWireTapTargetAt(wx, wy, tolerance = getHitTolerance(11, 18), exclud
         }
     }
 
-    // 2. Check any point along existing wire segments (T-junction / tap)
     let bestHit = null;
     let bestDist = tolerance;
     for (let i = state.wires.length - 1; i >= 0; i--) {
@@ -1711,7 +1704,6 @@ function computeJunctionDots() {
 
     const junctionMap = new Map();
 
-    // 1. Where 3 or more wire endpoints meet at the exact same point
     for (const [key, count] of endpointCounts.entries()) {
         if (count >= 3) {
             const [x, y] = key.split(',').map(Number);
@@ -1719,7 +1711,6 @@ function computeJunctionDots() {
         }
     }
 
-    // 2. Where a wire endpoint lands (T-taps) onto any segment of another wire
     for (const ep of wireEndpoints) {
         const key = `${ep.x},${ep.y}`;
         if (junctionMap.has(key)) continue;
@@ -1781,8 +1772,6 @@ function buildElectricalGraph() {
     }
 
     const compTermKeys = new Map();
-    // Only terminals and wire endpoints can tap into a wire segment;
-    // interior wire bends/vertices that merely cross another wire must remain unconnected.
     const tapNodes = [];
 
     for (const comp of state.components) {
@@ -1811,8 +1800,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Connect terminals or wire endpoints that land on any segment of a wire (T-junction / tap).
-    // Crossing wires without an endpoint terminating on the segment are NOT unioned.
     for (const w of state.wires) {
         const pts = w.points || [];
         if (pts.length < 2) continue;
@@ -1829,7 +1816,6 @@ function buildElectricalGraph() {
         }
     }
 
-    // Connect terminals and wire endpoints that share the exact same coordinate (within 4px)
     for (let i = 0; i < tapNodes.length; i++) {
         for (let j = i + 1; j < tapNodes.length; j++) {
             if (Math.hypot(tapNodes[i].x - tapNodes[j].x, tapNodes[i].y - tapNodes[j].y) <= 4) {
@@ -2541,6 +2527,42 @@ function roundRectPath(ctx, x, y, w, h, r) {
     ctx.closePath();
 }
 
+function getComponentTagAnchorX(comp, def) {
+    const rot = (((comp.rotation || 0) % 360) + 360) % 360;
+    const isSideways = rot === 90 || rot === 270;
+
+    let bodyHalfSpanX = def.width / 2;
+    let bodyHalfSpanY = def.height / 2;
+
+    if (def.isSource) {
+        bodyHalfSpanX = Math.max(16, (def.width - 8) / 2);
+        bodyHalfSpanY = 14;
+    } else if (def.isTransformer) {
+        bodyHalfSpanX = 24;
+        bodyHalfSpanY = 26;
+    } else if (def.isCoil) {
+        bodyHalfSpanX = 18;
+        bodyHalfSpanY = 14;
+    } else if (def.isMotor) {
+        bodyHalfSpanX = 26;
+        bodyHalfSpanY = 26;
+    } else if (def.isLamp) {
+        bodyHalfSpanX = 16;
+        bodyHalfSpanY = 16;
+    } else if (def.isBuzzer) {
+        bodyHalfSpanX = 14;
+        bodyHalfSpanY = 14;
+    } else if (def.isSwitch || def.isOverload || def.isContact) {
+        const termXs = (def.terminals || []).map(t => Math.abs(t.x));
+        const maxTermX = termXs.length > 0 ? Math.max(...termXs) : 0;
+        bodyHalfSpanX = Math.max(14, maxTermX + 6);
+        bodyHalfSpanY = 20;
+    }
+
+    const effectiveHalfX = isSideways ? bodyHalfSpanY : bodyHalfSpanX;
+    return effectiveHalfX + 4;
+}
+
 function drawComponent(ctx, comp, isSelected) {
     const def = CATALOG[comp.type];
     if (!def) return;
@@ -3088,13 +3110,14 @@ function drawComponent(ctx, comp, isSelected) {
         ctx.fillStyle = isDark ? '#93c5fd' : '#1e40af';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        const offsetX = (((comp.rotation || 0) % 180 + 180) % 180 === 0 ? def.width : def.height) / 2 + 6;
-        ctx.fillText(tag, offsetX, -6);
+        const offsetX = getComponentTagAnchorX(comp, def);
+        const tagY = comp.comment ? -5 : 0;
+        ctx.fillText(tag, offsetX, tagY);
 
         if (comp.comment) {
             ctx.font = '9px "Inter", sans-serif';
             ctx.fillStyle = strokeMuted;
-            ctx.fillText(comp.comment, offsetX, 7);
+            ctx.fillText(comp.comment, offsetX, 6);
         }
     }
 
@@ -4588,13 +4611,11 @@ window.addEventListener('load', () => {
         showToast('Canvas cleared');
     });
 
-    // Direct Device File Explorer Export (.json)
     document.getElementById('btn-export-json').addEventListener('click', () => {
         document.getElementById('menu-file').classList.add('hidden');
         exportSchematicToFile();
     });
 
-    // Direct Device File Explorer Import (.json)
     document.getElementById('btn-import-json').addEventListener('click', () => {
         document.getElementById('menu-file').classList.add('hidden');
         triggerImportFromFileExplorer();
@@ -4608,7 +4629,6 @@ window.addEventListener('load', () => {
         e.target.value = '';
     });
 
-    // Inspector Draft Change Listeners + Explicit Apply
     ['prop-tag', 'prop-comment', 'prop-pri-v', 'prop-sec-v', 'prop-delay'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -4662,7 +4682,6 @@ window.addEventListener('load', () => {
     document.getElementById('prop-btn-dup').addEventListener('click', duplicateSelected);
     document.getElementById('prop-btn-del').addEventListener('click', deleteSelected);
 
-    // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
         if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
 
