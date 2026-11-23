@@ -120,6 +120,13 @@
             background-color: #0f172a;
             color: #ffffff;
         }
+
+        /* Desktop-only Help Button & Dropdown visibility */
+        @media (pointer: coarse) {
+            #desktop-help-wrapper {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-cad-bgDark dark:text-slate-100 flex flex-col overflow-hidden transition-colors duration-150">
@@ -250,6 +257,91 @@
                 <svg id="icon-sun" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 <svg id="icon-moon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
             </button>
+
+            <!-- DESKTOP-ONLY HELP / KEYBOARD SHORTCUTS MENU -->
+            <div id="desktop-help-wrapper" class="relative hidden md:block">
+                <button id="btn-help-menu" type="button" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts" aria-expanded="false" aria-haspopup="true" class="touch-target flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 9.25a2.25 2.25 0 014.37.75c0 1.5-2.12 2.12-2.12 3.25"/>
+                        <circle cx="12" cy="16.5" r="0.75" fill="currentColor" stroke="none"/>
+                    </svg>
+                </button>
+
+                <div id="menu-help" role="menu" aria-label="Keyboard Shortcuts" class="hidden absolute right-0 mt-1.5 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-3 z-50">
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 9.25a2.25 2.25 0 014.37.75c0 1.5-2.12 2.12-2.12 3.25"/>
+                                <circle cx="12" cy="16.5" r="0.75" fill="currentColor" stroke="none"/>
+                            </svg>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Keyboard Shortcuts</span>
+                        </div>
+                        <kbd class="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600">?</kbd>
+                    </div>
+
+                    <div class="max-h-[65vh] overflow-y-auto space-y-1.5 pr-0.5 text-xs">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pt-0.5">Tools &amp; Canvas</div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Select &amp; Move Tool</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">V</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Draw Wire Tool</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">W</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Pan Canvas</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Space + Drag</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Zoom In / Out</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Scroll Wheel</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Cancel Wire / Deselect</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Esc</kbd>
+                        </div>
+
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pt-1.5">Editing &amp; History</div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Rotate Selected 90°</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">R</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Duplicate Selected</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Ctrl + D</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Delete Selected</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Del / Backspace</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Undo</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Ctrl + Z</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Redo</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Ctrl + Y</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Apply Inspector Fields</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Enter</kbd>
+                        </div>
+
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 pt-1.5">File Operations</div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Export Schematic (.json)</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Ctrl + S</kbd>
+                        </div>
+                        <div class="flex items-center justify-between py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/70">
+                            <span class="text-slate-700 dark:text-slate-200 font-medium">Import Schematic (.json)</span>
+                            <kbd class="px-2 py-0.5 font-mono text-[11px] font-bold rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-blue-300 border border-slate-300 dark:border-slate-600 shadow-2xs">Ctrl + O</kbd>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <button id="btn-toggle-inspector" type="button" title="Toggle Properties Inspector" class="touch-target flex items-center justify-center gap-1.5 px-3 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
@@ -1034,6 +1126,32 @@ function showToast(msg, isError = false) {
     toastTimer = setTimeout(() => {
         banner.classList.add('hidden');
     }, isError ? 3200 : 2200);
+}
+
+// =========================================================================
+// HELP MENU DROPDOWN (DESKTOP ONLY)
+// =========================================================================
+function setHelpMenuOpen(isOpen) {
+    const menu = document.getElementById('menu-help');
+    const btn = document.getElementById('btn-help-menu');
+    if (!menu || !btn) return;
+    if (isOpen) {
+        const fileMenu = document.getElementById('menu-file');
+        if (fileMenu) fileMenu.classList.add('hidden');
+        menu.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-blue-600', 'dark:text-blue-400');
+    } else {
+        menu.classList.add('hidden');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-blue-600', 'dark:text-blue-400');
+    }
+}
+
+function toggleHelpMenu() {
+    const menu = document.getElementById('menu-help');
+    if (!menu) return;
+    setHelpMenuOpen(menu.classList.contains('hidden'));
 }
 
 // =========================================================================
@@ -4345,6 +4463,11 @@ window.addEventListener('load', () => {
         resizeCanvas();
     });
 
+    document.getElementById('btn-help-menu').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleHelpMenu();
+    });
+
     document.addEventListener('pointerdown', (e) => {
         const sidebar = document.getElementById('left-sidebar');
         const toggleBtn = document.getElementById('btn-toggle-sidebar');
@@ -4358,6 +4481,13 @@ window.addEventListener('load', () => {
         if (fileMenu && !fileMenu.classList.contains('hidden')) {
             if (!fileMenu.contains(e.target) && (!fileBtn || !fileBtn.contains(e.target))) {
                 fileMenu.classList.add('hidden');
+            }
+        }
+        const helpMenu = document.getElementById('menu-help');
+        const helpBtn = document.getElementById('btn-help-menu');
+        if (helpMenu && !helpMenu.classList.contains('hidden')) {
+            if (!helpMenu.contains(e.target) && (!helpBtn || !helpBtn.contains(e.target))) {
+                setHelpMenuOpen(false);
             }
         }
     });
@@ -4441,6 +4571,7 @@ window.addEventListener('load', () => {
 
     document.getElementById('btn-file-menu').addEventListener('click', (e) => {
         e.stopPropagation();
+        setHelpMenuOpen(false);
         document.getElementById('menu-file').classList.toggle('hidden');
     });
 
@@ -4554,6 +4685,9 @@ window.addEventListener('load', () => {
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
             e.preventDefault();
             triggerImportFromFileExplorer();
+        } else if (e.key === '?' && !isTouchDevice() && window.innerWidth >= 768) {
+            e.preventDefault();
+            toggleHelpMenu();
         } else if (e.key === 'Delete' || e.key === 'Backspace') {
             deleteSelected();
         } else if (e.key.toLowerCase() === 'r') {
@@ -4563,6 +4697,9 @@ window.addEventListener('load', () => {
         } else if (e.key.toLowerCase() === 'w') {
             setTool('wire');
         } else if (e.key === 'Escape') {
+            setHelpMenuOpen(false);
+            const fileMenu = document.getElementById('menu-file');
+            if (fileMenu) fileMenu.classList.add('hidden');
             state.drawingWire = null;
             state.selectedIds.clear();
             updateFloatingActions();
@@ -4588,4 +4725,4 @@ window.addEventListener('load', () => {
 });
 </script>
 </body>
-    </html>
+</html>
